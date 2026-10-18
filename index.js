@@ -1,7 +1,7 @@
-// Eren Bot v1.0.7 - إصدار الاتصال الدائم 24/7 لـ Railway
+// Eren Bot v1.0.8 - إصدار توليد الكود الفوري
 const fs = require('fs');
 const path = require('path');
-const http = require('http'); // استدعاء خادم الويب المدمج لضمان بقاء السيرفر مستيقظاً
+const http = require('http');
 
 // 🛠️ تنظيف حظر المطور تلقائياً من الملفات الداخلية للمكتبة
 try {
@@ -16,15 +16,22 @@ try {
             console.log('[🛠️] تم تنظيف بيئة تشغيل Yebail وتخطي حظر المطور بنجاح!');
         }
     }
-} catch (e) {
-    console.log('[!] تنبيه: لم يتم تعديل ملف الحظر، سنحاول التشغيل المباشر...');
-}
+} catch (e) {}
 
-// 🌐 إنشاء خادم ويب بسيط لإعلام Railway أن التطبيق حي ومستمر
-const PORT = process.env.PORT || 3000;
+// 🧹 فرض مسح أي ملفات جلسة قديمة معلقة لتوليد كود جديد تماماً
+try {
+    const sessionPath = path.join(__dirname, 'session_eren_auth');
+    if (fs.existsSync(sessionPath)) {
+        fs.rmSync(sessionPath, { recursive: true, force: true });
+        console.log('[🧹] تم مسح الجلسة المعلقة بنجاح لطلب كود اقتران جديد...');
+    }
+} catch (e) {}
+
+// 🌐 خادم الويب المدمج للبقاء 24/7
+const PORT = process.env.PORT || 8080;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end(`البوت 『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝓉 『✦』 يعمل بنجاح ومستيقظ الآن!`);
+    res.end(`البوت يعمل بنجاح!`);
 }).listen(PORT, () => {
     console.log(`[🌐] تم تشغيل خادم البقاء المدمج على المنفذ: ${PORT}`);
 });
@@ -54,10 +61,9 @@ async function startBot() {
     sock.ev.on('connection.update', async (update) => {
         const { connection } = update;
 
-        // طلب كود الاقتران وطباعته بمجرد جاهزية السيرفر
         if (!sock.authState.creds.registered && !pairingRequested) {
             pairingRequested = true;
-            await delay(4000); // انتظر 4 ثوانٍ للتأكد من استقرار الشبكة والاتصال
+            await delay(5000); // انتظر 5 ثوانٍ لضمان استقرار الشبكة بالكامل
             try {
                 console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت من خوادم واتساب: ${BOT_NUMBER}`);
                 const code = await sock.requestPairingCode(BOT_NUMBER);
