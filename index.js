@@ -1,14 +1,13 @@
-// Eren Bot v1.0.5 - إصدار التخطي الذكي لحظر المكتبة
+// Eren Bot v1.0.6 - إصدار توليد كود الاقتران النهائي
 const fs = require('fs');
 const path = require('path');
 
-// 🛠️ خدعة برمجية لتنظيف حظر "FIX ERROR DULU" تلقائياً من ملفات المكتبة الداخلية قبل التشغيل
+// 🛠️ تنظيف حظر المطور تلقائياً من الملفات الداخلية للمكتبة
 try {
     const targetPath = path.join(__dirname, 'node_modules', '@yemo-dev', 'yebail', 'lib', 'Defaults', 'index.js');
     if (fs.existsSync(targetPath)) {
         let fileContent = fs.readFileSync(targetPath, 'utf8');
         if (fileContent.includes('FIX ERROR DULU')) {
-            // حذف عبارة الحظر البرمجية لفتح الاتصال نظيفاً
             fileContent = fileContent.replace(/console.log\(['"]FIX ERROR DULU['"]\);?\s*process.exit\(\d*\);?/g, '');
             fileContent = fileContent.replace(/process.exit\(\d*\);?\s*\/\/.*FIX ERROR DULU/g, '');
             fileContent = fileContent.replace(/FIX ERROR DULU/g, 'Clean Environment');
@@ -20,8 +19,7 @@ try {
     console.log('[!] تنبيه: لم يتم تعديل ملف الحظر، سنحاول التشغيل المباشر...');
 }
 
-// البدء في استدعاء المكتبة وتشغيلها بعد التنظيف
-const { default: makeWASocket, useMultiFileAuthState, Browsers } = require('@yemo-dev/yebail');
+const { default: makeWASocket, useMultiFileAuthState, Browsers, delay } = require('@yemo-dev/yebail');
 const pino = require('pino');
 
 const BOT_NAME = '『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝓉 『✦』';
@@ -41,8 +39,27 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds);
 
+    let pairingRequested = false;
+
     sock.ev.on('connection.update', async (update) => {
-        const { connection } = update;
+        const { connection, qr } = update;
+
+        // طلب كود الاقتران وطباعته بمجرد جاهزية الاتصال وقبل التسجيل
+        if (!sock.authState.creds.registered && !pairingRequested) {
+            pairingRequested = true;
+            // انتظر 3 ثوانٍ داخل الحدث للتأكد من استقرار الشبكة تماماً
+            await delay(3000); 
+            try {
+                console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت من خوادم واتساب: ${BOT_NUMBER}`);
+                const code = await sock.requestPairingCode(BOT_NUMBER);
+                console.log('\n===========================================');
+                console.log(`🔐 كود اقتران واتساب الخاص بك هو: ${code}`);
+                console.log('===========================================\n');
+            } catch (error) {
+                console.error('❌ فشل جلب كود الاقتران، سنحاول مجدداً...', error.message);
+                pairingRequested = false;
+            }
+        }
 
         if (connection === 'open') {
             console.log(`\n✅ تم اتصال البوت [ ${BOT_NAME} ] بنجاح وهو يعمل الآن بانتظام! 🍷\n`);
@@ -51,22 +68,7 @@ async function startBot() {
             startBot();
         }
     });
-
-    // جلب كود الاقتران مباشرة
-    if (!sock.authState.creds.registered) {
-        setTimeout(async () => {
-            try {
-                console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت من خوادم واتساب: ${BOT_NUMBER}`);
-                const code = await sock.requestPairingCode(BOT_NUMBER);
-                console.log('\n===========================================');
-                console.log(`🔐 كود اقتران واتساب الخاص بك هو: ${code}`);
-                console.log('===========================================\n');
-            } catch (error) {
-                console.error('❌ فشل جلب كود الاقتران:', error.message);
-            }
-        }, 5000);
-    }
 }
 
-// تشغيل البوت رسمياً
+// تشغيل البوت
 startBot().catch(err => console.error("خطأ في التشغيل:", err));
