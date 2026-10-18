@@ -4,6 +4,9 @@
   "description": "WhatsApp Bot using Yebail",
   "main": "index.js",
   "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "@yemo-dev/yebail": "^4.2.12",
     "pino": "^9.0.0",
