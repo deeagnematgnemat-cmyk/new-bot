@@ -1,4 +1,4 @@
-// تحديث تشغيل البوت - Eren Bot v1.0.1
+// Eren Bot v1.0.2 - تشغيل نظيف ومعزول
 const { default: makeWASocket, useMultiFileAuthState, Browsers } = require('@yemo-dev/yebail');
 const pino = require('pino');
 
@@ -6,7 +6,8 @@ const BOT_NAME = '『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝓉 『✦』';
 const BOT_NUMBER = '962795106901';
 
 async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('session_auth');
+    // 📁 استخدام اسم مجلد جديد كلياً لتخطي أي ملفات كاش معطوبة في سيرفر Railway
+    const { state, saveCreds } = await useMultiFileAuthState('session_eren');
 
     const sock = makeWASocket({
         auth: state,
@@ -35,7 +36,7 @@ async function startBot() {
                 } catch (err) {
                     console.error('❌ فشل توليد الكود، المحاولة قائمة مجدداً...', err);
                 }
-            }, 5000); // رفع وقت الانتظار إلى 5 ثوانٍ لضمان جاهزية السيرفر كلياً
+            }, 5000); // 5 ثوانٍ انتظار لضمان استقرار السيرفر كلياً
         }
 
         if (connection === 'close') {
@@ -47,5 +48,5 @@ async function startBot() {
     });
 }
 
-// تشغيل البوت
+// بدء التشغيل
 startBot();
