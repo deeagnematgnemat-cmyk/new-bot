@@ -1,19 +1,11 @@
-
 {
-  "name": "eren-whatsapp-bot",
+  "name": "whatsapp-yebail-bot",
   "version": "1.0.0",
-  "private": true,
-  "description": "『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝑡 『✦』",
+  "description": "WhatsApp Bot using Yebail",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "engines": {
-    "node": ">=20"
-  },
+  "type": "commonjs",
   "dependencies": {
-    "@yemo-dev/yebail": "4.2.12",
-    "jimp": "0.22.12",
-    "pino": "^9.6.0"
+    "@yemo-dev/yebail": "^4.2.12",
+    "qrcode-terminal": "^0.12.0"
   }
 }
