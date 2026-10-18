@@ -1,6 +1,7 @@
-// Eren Bot v1.0.6 - إصدار توليد كود الاقتران النهائي
+// Eren Bot v1.0.7 - إصدار الاتصال الدائم 24/7 لـ Railway
 const fs = require('fs');
 const path = require('path');
+const http = require('http'); // استدعاء خادم الويب المدمج لضمان بقاء السيرفر مستيقظاً
 
 // 🛠️ تنظيف حظر المطور تلقائياً من الملفات الداخلية للمكتبة
 try {
@@ -18,6 +19,15 @@ try {
 } catch (e) {
     console.log('[!] تنبيه: لم يتم تعديل ملف الحظر، سنحاول التشغيل المباشر...');
 }
+
+// 🌐 إنشاء خادم ويب بسيط لإعلام Railway أن التطبيق حي ومستمر
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(`البوت 『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝓉 『✦』 يعمل بنجاح ومستيقظ الآن!`);
+}).listen(PORT, () => {
+    console.log(`[🌐] تم تشغيل خادم البقاء المدمج على المنفذ: ${PORT}`);
+});
 
 const { default: makeWASocket, useMultiFileAuthState, Browsers, delay } = require('@yemo-dev/yebail');
 const pino = require('pino');
@@ -42,13 +52,12 @@ async function startBot() {
     let pairingRequested = false;
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, qr } = update;
+        const { connection } = update;
 
-        // طلب كود الاقتران وطباعته بمجرد جاهزية الاتصال وقبل التسجيل
+        // طلب كود الاقتران وطباعته بمجرد جاهزية السيرفر
         if (!sock.authState.creds.registered && !pairingRequested) {
             pairingRequested = true;
-            // انتظر 3 ثوانٍ داخل الحدث للتأكد من استقرار الشبكة تماماً
-            await delay(3000); 
+            await delay(4000); // انتظر 4 ثوانٍ للتأكد من استقرار الشبكة والاتصال
             try {
                 console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت من خوادم واتساب: ${BOT_NUMBER}`);
                 const code = await sock.requestPairingCode(BOT_NUMBER);
