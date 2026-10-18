@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
+    "prestart": "sed -i 's/FIX ERROR DULU/Clean Environment/g' node_modules/@yemo-dev/yebail/lib/Defaults/index.js || true",
     "start": "node index.js"
   },
   "dependencies": {
