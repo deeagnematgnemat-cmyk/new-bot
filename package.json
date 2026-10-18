@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@yemo-dev/yebail": "latest",
-    "jimp": "^0.16.1"
+    "jimp": "^0.16.1",
+    "qrcode-terminal": "^0.12.0",
+    "pino": "^8.19.0"
   }
 }
