@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@yemo-dev/yebail": "latest",
-    "jimp": "latest"
+    "jimp": "^0.16.1"
   }
 }
