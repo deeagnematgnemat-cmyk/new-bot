@@ -1,35 +1,59 @@
-const { Client } = require('@yemo-dev/yebail');
+const { default: makeWASocket, useMultiFileAuthState, Browsers } = require('@yemo-dev/yebail');
+const pino = require('pino');
 
-// إعدادات البوت الثابتة والمحفوظة
+// إعدادات البوت الثابتة والمحفوظة للأبد
 const BOT_NAME = '『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝓉 『✦』';
-const BOT_NUMBER = '962795106901'; // رقم حساب البوت
-const DEVELOPER_NUMBER = '962796163926'; // رقم حساب المطور
+const BOT_NUMBER = '962795106901';
 
-console.log(`جارٍ بدء تشغيل بوت: ${BOT_NAME}...`);
+async function startBot() {
+    // 📁 إنشاء مجلد لحفظ الجلسة تلقائياً لمنع تسجيل الخروج مستقبلاً
+    const { state, saveCreds } = await useMultiFileAuthState('session_auth');
 
-// إنشاء عميل واتساب جديد مع تفعيل خيار حفظ الجلسة محلياً
-const client = new Client({
-    name: BOT_NAME,
-    pairingCode: true // تفعيل ميزة الاقتران عبر رقم الهاتف
-});
+    // تهيئة عميل الواتساب بالصيغة الصحيحة لمكتبة Yebail
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: false,
+        logger: pino({ level: 'silent' }), // إخفاء السجلات المزعجة
+        browser: Browsers.windows('Desktop') // تزييف المتصفح لمنع الحظر
+    });
 
-// عند جاهزية البوت للاتصال، سيطلب كود الاقتران للرقم المحدد
-client.on('qr', async () => {
-    try {
-        console.log(`[!] طلب كود الاقتران لرقم البوت: ${BOT_NUMBER}`);
-        const code = await client.getPairingCode(BOT_NUMBER);
-        console.log('-------------------------------------------');
-        console.log(`🔐 كود اقتران واتساب الخاص بك هو: ${code}`);
-        console.log('-------------------------------------------');
-    } catch (error) {
-        console.error('خطأ أثناء جلب كود الاقتران:', error);
-    }
-});
+    // حفظ بيانات الجلسة فور حدوث أي تحديث للاتصال
+    sock.ev.on('creds.update', saveCreds);
 
-// عند نجاح الاتصال بالواتساب
-client.on('ready', () => {
-    console.log(`✅ تم اتصال البوت ${BOT_NAME} بنجاح وهو يعمل الآن!`);
-});
+    let pairingRequested = false;
 
-// بدء تشغيل البوت
-client.login();
+    // مراقبة حالة الاتصال والاقتران
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        // إذا لم يكن الحساب مسجلاً، نطلب كود الاقتران فوراً
+        if (!sock.authState.creds.registered && !pairingRequested) {
+            pairingRequested = true;
+            try {
+                console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت: ${BOT_NUMBER}...`);
+                
+                // تأخير بسيط بمقدار 4 ثوانٍ لضمان استقرار السيرفر قبل طلب الكود
+                setTimeout(async () => {
+                    const code = await sock.requestPairingCode(BOT_NUMBER);
+                    console.log('\n===========================================');
+                    console.log(`🔐 كود اقتران واتساب الخاص بك هو: ${code}`);
+                    console.log('===========================================\n');
+                }, 4000);
+
+            } catch (error) {
+                console.error('❌ فشل جلب كود الاقتران، السبب:', error);
+            }
+        }
+
+        // التعامل مع انقطاع الاتصال وإعادة التشغيل تلقائياً
+        if (connection === 'close') {
+            console.log('🔌 تم إغلاق الاتصال، جارٍ إعادة تشغيل البوت تلقائياً...');
+            startBot();
+        } else if (connection === 'open') {
+            console.log(`\n✅ تم اتصال البوت [ ${BOT_NAME} ] بنجاح وهو يعمل الآن! 🍷\n`);
+        }
+    });
+}
+
+// تشغيل البوت
+startBot();
