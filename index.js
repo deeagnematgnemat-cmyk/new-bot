@@ -1,4 +1,4 @@
-// Eren Bot v1.0.8 - إصدار توليد الكود الفوري
+// Eren Bot v1.0.9 - إصدار المسار المطلق والتشغيل الفوري
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -18,16 +18,7 @@ try {
     }
 } catch (e) {}
 
-// 🧹 فرض مسح أي ملفات جلسة قديمة معلقة لتوليد كود جديد تماماً
-try {
-    const sessionPath = path.join(__dirname, 'session_eren_auth');
-    if (fs.existsSync(sessionPath)) {
-        fs.rmSync(sessionPath, { recursive: true, force: true });
-        console.log('[🧹] تم مسح الجلسة المعلقة بنجاح لطلب كود اقتران جديد...');
-    }
-} catch (e) {}
-
-// 🌐 خادم الويب المدمج للبقاء 24/7
+// 🌐 خادم الويب المدمج للبقاء مستيقظاً 24/7
 const PORT = process.env.PORT || 8080;
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -45,8 +36,11 @@ const BOT_NUMBER = '962795106901';
 async function startBot() {
     console.log(`[+] جارٍ بدء تهيئة العميل لـ: ${BOT_NAME}...`);
 
-    const { state, saveCreds } = await useMultiFileAuthState('session_eren_auth');
+    // 📁 تأمين مسار مطلق ومؤكد للمجلد داخل سيرفر Railway لضمان صلاحيات الكتابة والقراءة
+    const absoluteSessionPath = path.join(__dirname, 'session_eren_auth');
+    const { state, saveCreds } = await useMultiFileAuthState(absoluteSessionPath);
 
+    // تهيئة السوكت بالصيغة الرسمية المستقرة
     const sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
@@ -54,16 +48,14 @@ async function startBot() {
         browser: Browsers.windows('Desktop')
     });
 
+    // حفظ التحديثات الخاصة بالجلسة فوراً
     sock.ev.on('creds.update', saveCreds);
 
-    let pairingRequested = false;
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection } = update;
-
-        if (!sock.authState.creds.registered && !pairingRequested) {
-            pairingRequested = true;
-            await delay(5000); // انتظر 5 ثوانٍ لضمان استقرار الشبكة بالكامل
+    // 🔐 تشغيل طلب كود الاقتران فوراً وبشكل مستقل ومباشر بعد بناء الـ sock
+    if (!sock.authState.creds.registered) {
+        console.log(`[!] نظام التسجيل جاهز كلياً...`);
+        // تأخير بسيط بمقدار 4 ثوانٍ لضمان اكتمال تحميل موديولات الشبكة في السيرفر
+        setTimeout(async () => {
             try {
                 console.log(`[!] جارٍ طلب كود الاقتران لرقم البوت من خوادم واتساب: ${BOT_NUMBER}`);
                 const code = await sock.requestPairingCode(BOT_NUMBER);
@@ -71,11 +63,14 @@ async function startBot() {
                 console.log(`🔐 كود اقتران واتساب الخاص بك هو: ${code}`);
                 console.log('===========================================\n');
             } catch (error) {
-                console.error('❌ فشل جلب كود الاقتران، سنحاول مجدداً...', error.message);
-                pairingRequested = false;
+                console.error('❌ فشل جلب كود الاقتران، السبب:', error.message);
             }
-        }
+        }, 4000);
+    }
 
+    // الاستماع لحالة الاتصال والإغلاق
+    sock.ev.on('connection.update', async (update) => {
+        const { connection } = update;
         if (connection === 'open') {
             console.log(`\n✅ تم اتصال البوت [ ${BOT_NAME} ] بنجاح وهو يعمل الآن بانتظام! 🍷\n`);
         } else if (connection === 'close') {
@@ -85,5 +80,5 @@ async function startBot() {
     });
 }
 
-// تشغيل البوت
-startBot().catch(err => console.error("خطأ في التشغيل:", err));
+// تشغيل البوت رسمياً
+startBot().catch(err => console.error("خطأ عام في التشغيل:", err));
