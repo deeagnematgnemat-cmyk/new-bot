@@ -1,0 +1,13 @@
+{
+  "name": "eren-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp Bot using Yebail",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@yemo-dev/yebail": "latest"
+  }
+}
