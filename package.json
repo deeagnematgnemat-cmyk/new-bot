@@ -3,7 +3,7 @@
   "name": "eren-whatsapp-bot",
   "version": "1.0.0",
   "private": true,
-  "description": "Eren WhatsApp Bot",
+  "description": "『✦』 𝐸𝓇𝑒𝓃 🍷 𝐵𝑜𝑡 『✦』",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -12,6 +12,8 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@yemo-dev/yebail": "4.2.12"
+    "@yemo-dev/yebail": "4.2.12",
+    "jimp": "0.22.12",
+    "pino": "^9.6.0"
   }
 }
